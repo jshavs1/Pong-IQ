@@ -6,7 +6,9 @@ using MathNet.Numerics.LinearAlgebra;
 
 public class LayerWeights
 {
-    Matrix<double> weights;
+    public Matrix<double> weights;
+    public static double learningRate = 0.1;
+    Vector<double> bias;
     int rows, columns;
 
     public LayerWeights(int rows, int columns)
@@ -15,12 +17,21 @@ public class LayerWeights
         Func<double, double> randomize = x => (double)UnityEngine.Random.value;
         weights.MapInplace(randomize, Zeros.Include);
 
+        bias = CreateVector.Dense<double>(columns);
+        bias.MapInplace(randomize, Zeros.Include);
+
         this.rows = rows;
         this.columns = columns;
     }
 
-    public void adjustWeights(Matrix<double> d)
+    public void adjustWeights(Matrix<double> d, Vector<double> e)
     {
-        weights = weights - d;
+        this.bias = bias - e * learningRate;
+        this.weights = weights - d * learningRate;
+    }
+
+    public Vector<double> multiply(Vector<double> input)
+    {
+        return (weights.Transpose() * input) + bias;
     }
 }

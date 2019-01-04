@@ -1,18 +1,10 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using MathNet.Numerics.LinearAlgebra;
 
-public class IActivation : MonoBehaviour
+public interface IActivation
 {
-    // Start is called before the first frame update
-    void Start()
-    {
-        
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
+    Vector<double> activation(Vector<double> input);
+    Vector<double> derivative(Vector<double> input);
 }
