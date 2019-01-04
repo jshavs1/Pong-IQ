@@ -41,10 +41,12 @@ public class NeuralNet
         Vector<double> e2 = (a - t).PointwiseMultiply(outputLayer.derivative);
         Matrix<double> d2 = L2.weights.Transpose();
 
+        Debug.Log(d2);
+
         for (int i = 0; i < d2.ColumnCount; i++)
         {
             Vector<double> column = d2.Column(i);
-            d2.SetColumn(i, column * e2[i]);
+            d2.SetColumn(i, column.PointwiseMultiply(e2));
         }
 
         Vector<double> e1 = hiddenLayer.derivative.PointwiseMultiply(e2 * L2.weights.Transpose());

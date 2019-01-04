@@ -7,7 +7,7 @@ public class PongIq : MonoBehaviour
 {
     public int inputNodes, outputNodes, trainingIterations;
     public Cannon cannon;
-    private bool[] remainingCups;
+    public bool[] remainingCups;
     private int remainingIterations;
     private NeuralNet nn;
 
@@ -20,18 +20,47 @@ public class PongIq : MonoBehaviour
         remainingCups = new bool[10];
         remainingIterations = trainingIterations;
         Train();
+        Time.timeScale = 3.0f;
+    }
+
+    private void Update()
+    {
+        if (remainingIterations > 0) { return; }
+
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
+            TrainedShot();
+        }
     }
 
     void Train()
     {
-        if (remainingIterations == 0) { Debug.Log("Training Finished."); }
-
         double[] input = GetInput();
 
         nn.predict(input);
         cannon.Shoot((float)input[0], (float)input[1]);
         
         remainingIterations--;
+
+        if (remainingIterations == 0)
+        {
+            TrainingFinished();
+        }
+    }
+
+    void TrainingFinished()
+    {
+        Time.timeScale = 1.0f;
+    }
+
+    void TrainedShot()
+    {
+        double[] input = GetInput();
+        double value = nn.predict(input)[0];
+        if (value > 0.7f)
+        {
+            cannon.Shoot((float)input[0], (float)input[1]);
+        }
     }
 
     double[] GetInput()
@@ -53,6 +82,13 @@ public class PongIq : MonoBehaviour
     public void CollisionDetected(int index, double value)
     {
         nn.train(new double[] { value });
-        if (value == 1.0 && index != -1) { remainingCups[index] = true; }
+        if (remainingIterations > 0)
+        {
+            Train();
+        }
+        else
+        {
+            if (index != -1) { remainingCups[index] = true; }
+        }
     }
 }
