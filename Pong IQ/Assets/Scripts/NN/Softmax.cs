@@ -2,18 +2,17 @@
 using System.Collections.Generic;
 using MathNet.Numerics.LinearAlgebra;
 using UnityEngine;
-using System;
 
-public class Tanh : IActivation
+public class Softmax : IActivation
 {
     public Vector<double> activation(Vector<double> input)
     {
-        Func<double, double> map = z => (Math.Exp(z) - Math.Exp(-z)) / (Math.Exp(z) + Math.Exp(-z));
-        return input.Map(map, Zeros.Include);
+        Vector<double> result = input / input[input.Count];
+        return result.SubVector(0, input.Count - 1);
     }
 
     public Vector<double> derivative(Vector<double> input)
     {
-        return 1.0 - this.activation(input).PointwisePower(2.0);
+        return null;
     }
 }

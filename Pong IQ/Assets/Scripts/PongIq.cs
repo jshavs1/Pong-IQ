@@ -5,22 +5,24 @@ using System;
 
 public class PongIq : MonoBehaviour
 {
-    public int inputNodes, outputNodes, trainingIterations;
+    public int inputNodes, hiddenNodes, outputNodes, trainingIterations;
     public Cannon cannon;
     public bool[] remainingCups;
-    private int remainingIterations;
+    public int remainingIterations;
     private NeuralNet nn;
+    private bool training;
 
     private float force, rotation;
 
     // Start is called before the first frame update
     void Start()
     {
-        nn = new NeuralNet(inputNodes, outputNodes);
+        nn = new NeuralNet(inputNodes, hiddenNodes, outputNodes);
         remainingCups = new bool[10];
         remainingIterations = trainingIterations;
         Train();
-        Time.timeScale = 3.0f;
+        Time.timeScale = 10.0f;
+        Debug.Log(nn.ToString());
     }
 
     private void Update()
@@ -29,17 +31,19 @@ public class PongIq : MonoBehaviour
 
         if (Input.GetKeyDown(KeyCode.Space))
         {
-            TrainedShot();
+            StartCoroutine(TrainedShot());
         }
     }
 
     void Train()
     {
+        if (training) { return; }
+        training = true;
         double[] input = GetInput();
 
         nn.predict(input);
         cannon.Shoot((float)input[0], (float)input[1]);
-        
+
         remainingIterations--;
 
         if (remainingIterations == 0)
@@ -51,16 +55,22 @@ public class PongIq : MonoBehaviour
     void TrainingFinished()
     {
         Time.timeScale = 1.0f;
+        Debug.Log(nn.ToString());
     }
 
-    void TrainedShot()
+    IEnumerator TrainedShot()
     {
-        double[] input = GetInput();
-        double value = nn.predict(input)[0];
-        if (value > 0.7f)
+        double[] input = null;
+        double[] results = new double[outputNodes];
+        while(results[0] < 0.5)
         {
-            cannon.Shoot((float)input[0], (float)input[1]);
+            yield return null;
+            input = GetInput();
+            results = nn.predict(input);
+            Debug.Log(results);
         }
+
+        cannon.Shoot((float)input[0], (float)input[1]);
     }
 
     double[] GetInput()
@@ -71,17 +81,20 @@ public class PongIq : MonoBehaviour
 
         d[0] = (double) force;
         d[1] = (double) rotation;
+
+        /*
         for (int i = 0; i < remainingCups.Length; i++)
         {
             d[i + 2] = remainingCups[i] ? 0.0 : 1.0;
         }
-
+        */
         return d;
     }
 
     public void CollisionDetected(int index, double value)
     {
-        nn.train(new double[] { value });
+        training = false;
+        nn.train(new double[] { value, 1.0 - value });
         if (remainingIterations > 0)
         {
             Train();

@@ -11,13 +11,13 @@ public class LayerWeights
     Vector<double> bias;
     int rows, columns;
 
-    public LayerWeights(int rows, int columns)
+    public LayerWeights(int columns, int rows)
     {
         weights = CreateMatrix.Dense<double>(rows, columns);
         Func<double, double> randomize = x => (double)UnityEngine.Random.value;
         weights.MapInplace(randomize, Zeros.Include);
 
-        bias = CreateVector.Dense<double>(columns);
+        bias = CreateVector.Dense<double>(rows);
         bias.MapInplace(randomize, Zeros.Include);
 
         this.rows = rows;
@@ -32,6 +32,6 @@ public class LayerWeights
 
     public Vector<double> multiply(Vector<double> input)
     {
-        return (weights.Transpose() * input) + bias;
+        return (weights * input) + bias;
     }
 }

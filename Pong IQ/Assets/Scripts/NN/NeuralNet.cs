@@ -2,17 +2,18 @@
 using System.Collections.Generic;
 using UnityEngine;
 using MathNet.Numerics.LinearAlgebra;
+using System;
 
 public class NeuralNet
 {
     int inputSize, hiddenSize, outputSize;
     LayerWeights L1, L2;
-    InputLayer inputLayer, hiddenLayer, outputLayer;
+    InputLayer inputLayer, hiddenLayer, outputLayer, softmaxLayer;
 
-    public NeuralNet(int inputSize, int outputSize)
+    public NeuralNet(int inputSize, int hiddenSize, int outputSize)
     {
         this.inputSize = inputSize;
-        this.hiddenSize = inputSize / 2;
+        this.hiddenSize = hiddenSize;
         this.outputSize = outputSize;
 
         this.L1 = new LayerWeights(inputSize, hiddenSize);
@@ -25,34 +26,44 @@ public class NeuralNet
         Vector<double> o1 = L1.multiply(inputLayer.input);
 
         hiddenLayer = new InputLayer(o1.Count, o1);
-        Vector<double> a1 = hiddenLayer.activation;
+        Vector<double> a1 = hiddenLayer.L1Activation;
 
         Vector<double> o2 = L2.multiply(a1);
         outputLayer = new InputLayer(o2.Count, o2);
 
-        return outputLayer.activation.ToArray();
+        // Softmax
+        Vector<double> s = CreateVector.Dense<double>(o2.Count + 1);
+        s.SetSubVector(0, o2.Count, o2);
+        s[o2.Count] = o2.Sum();
+        softmaxLayer = new InputLayer(o2.Count + 1, s);
+
+        outputLayer = softmaxLayer;
+
+        return outputLayer.L2Activation.ToArray();
     }
 
     public void train(double[] target)
     {
         Vector<double> t = CreateVector.Dense<double>(target);
-        Vector<double> a = outputLayer.activation;
+        Vector<double> a = outputLayer.L2Activation;
 
-        Vector<double> e2 = (a - t).PointwiseMultiply(outputLayer.derivative);
-        Matrix<double> d2 = L2.weights.Transpose();
+        Vector<double> e2 = (a - t);
+        Matrix<double> d2 = e2.ToColumnMatrix() * hiddenLayer.L1Activation.ToRowMatrix();
 
-        Debug.Log(d2);
 
-        for (int i = 0; i < d2.ColumnCount; i++)
-        {
-            Vector<double> column = d2.Column(i);
-            d2.SetColumn(i, column.PointwiseMultiply(e2));
-        }
+        Vector<double> e1 = hiddenLayer.L1Derivative.PointwiseMultiply(L2.weights.Transpose() * e2);
+        Matrix<double> d1 = e1.ToColumnMatrix() * inputLayer.input.ToRowMatrix();
 
-        Vector<double> e1 = hiddenLayer.derivative.PointwiseMultiply(e2 * L2.weights.Transpose());
-        Matrix<double> d1 = inputLayer.input.ToColumnMatrix() * e1.ToRowMatrix();
+        //Debug.Log(d1);
 
-        L2.adjustWeights(d2.Transpose(), e2);
+        L2.adjustWeights(d2, e2);
         L1.adjustWeights(d1, e1);
+
+        //Debug.Log("Target: " + t[0] + "\nOutput: " + a[0]);
+    }
+
+    public override string ToString()
+    {
+        return L1.weights.ToString();// + "\n" + L2.weights.ToString();
     }
 }

@@ -11,15 +11,12 @@ public class CollisionDetection : MonoBehaviour
     private void Start()
     {
         pongIq = GetComponentInParent<PongIq>();
-        if (index < 0) { value = 0.0; }
+        if (index < 0) { value = -1.0; }
         else { value = 1.0; }
     }
 
     private void OnCollisionEnter(Collision collision)
     {
         pongIq.CollisionDetected(index, value);
-        value = 0.0;
-
-        Destroy(collision.gameObject);
     }
 }

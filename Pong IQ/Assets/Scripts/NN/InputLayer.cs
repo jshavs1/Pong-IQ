@@ -6,7 +6,7 @@ using MathNet.Numerics.LinearAlgebra;
 public class InputLayer
 {
     public readonly Vector<double> input;
-    public static IActivation activationFunction = new Tanh();
+    public static IActivation L1ActivationFunction = new Tanh(), L2ActivationFunction = new Softmax();
     readonly double[] rawInput;
     readonly int size;
 
@@ -41,19 +41,35 @@ public class InputLayer
         return input[index];
     }
 
-    public Vector<double> activation
+    public Vector<double> L1Activation
     {
         get
         {
-            return activationFunction.activation(input);
+            return L1ActivationFunction.activation(input);
         }
     }
 
-    public Vector<double> derivative
+    public Vector<double> L1Derivative
     {
         get
         {
-            return activationFunction.derivative(input);
+            return L1ActivationFunction.derivative(input);
+        }
+    }
+
+    public Vector<double> L2Activation
+    {
+        get
+        {
+            return L2ActivationFunction.activation(input);
+        }
+    }
+
+    public Vector<double> L2Derivative
+    {
+        get
+        {
+            return L2ActivationFunction.derivative(input);
         }
     }
 }
