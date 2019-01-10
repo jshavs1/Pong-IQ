@@ -6,7 +6,7 @@ public class CollisionDetection : MonoBehaviour
 {
     PongIq pongIq;
     public int index;
-    private double value;
+    public double value;
 
     private void Start()
     {
@@ -17,6 +17,6 @@ public class CollisionDetection : MonoBehaviour
 
     private void OnCollisionEnter(Collision collision)
     {
-        pongIq.CollisionDetected(index, value);
+        //pongIq.CollisionDetected(index, value);
     }
 }

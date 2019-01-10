@@ -7,12 +7,11 @@ public class Softmax : IActivation
 {
     public Vector<double> activation(Vector<double> input)
     {
-        Vector<double> result = input / input[input.Count];
-        return result.SubVector(0, input.Count - 1);
+        return input / input.Sum();
     }
 
     public Vector<double> derivative(Vector<double> input)
     {
-        return null;
+        return CreateVector.Dense<double>(input.Count, 1.0);
     }
 }

@@ -8,16 +8,16 @@ public class LayerWeights
 {
     public Matrix<double> weights;
     public static double learningRate = 0.1;
-    Vector<double> bias;
+    public Vector<double> bias;
     int rows, columns;
 
-    public LayerWeights(int columns, int rows)
+    public LayerWeights(int rows, int columns)
     {
         weights = CreateMatrix.Dense<double>(rows, columns);
-        Func<double, double> randomize = x => (double)UnityEngine.Random.value;
+        Func<double, double> randomize = x => (double)UnityEngine.Random.Range(-1f, 1f);
         weights.MapInplace(randomize, Zeros.Include);
 
-        bias = CreateVector.Dense<double>(rows);
+        bias = CreateVector.Dense<double>(columns);
         bias.MapInplace(randomize, Zeros.Include);
 
         this.rows = rows;
@@ -26,12 +26,13 @@ public class LayerWeights
 
     public void adjustWeights(Matrix<double> d, Vector<double> e)
     {
-        this.bias = bias - e * learningRate;
-        this.weights = weights - d * learningRate;
+        //Debug.Log(bias + "\n" + e);
+        this.bias = bias - (e * learningRate);
+        this.weights = weights - (d * learningRate);
     }
 
     public Vector<double> multiply(Vector<double> input)
     {
-        return (weights * input) + bias;
+        return (weights.Transpose() * input) + bias;
     }
 }

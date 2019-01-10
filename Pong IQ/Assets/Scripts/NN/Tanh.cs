@@ -8,8 +8,7 @@ public class Tanh : IActivation
 {
     public Vector<double> activation(Vector<double> input)
     {
-        Func<double, double> map = z => (Math.Exp(z) - Math.Exp(-z)) / (Math.Exp(z) + Math.Exp(-z));
-        return input.Map(map, Zeros.Include);
+        return input.PointwiseTanh();
     }
 
     public Vector<double> derivative(Vector<double> input)
