@@ -5,8 +5,6 @@ using UnityEngine;
 public class Cannon : MonoBehaviour
 {
     public GameObject ball;
-    public float maxForce = 5f;
-    public float minForce = 3f;
     private GameObject activeBall;
 
 
@@ -23,14 +21,17 @@ public class Cannon : MonoBehaviour
         activeBall.transform.position = this.transform.position;
     }
 
-    public IEnumerator Shoot(float force, float rotation)
+    public IEnumerator Shoot(float force, float rotation, float maxForce, float minForce, float maxRotation)
     {
         yield return null;
         ResetBall();
+        float adjForce = Mathf.Lerp(minForce, maxForce, force), adjRotation = Mathf.Lerp(-maxRotation, maxRotation, rotation);
         activeBall.GetComponent<Ball>().ignoreCollision = false;
         this.transform.rotation = Quaternion.identity;
-        this.transform.eulerAngles = new Vector3(0f, rotation * 50f - 25f);
+        this.transform.eulerAngles = new Vector3(0f, adjRotation);
 
-        activeBall.GetComponent<Rigidbody>().AddForce((transform.forward + Vector3.up * 2f) * Mathf.Lerp(minForce, maxForce, force), ForceMode.Impulse);
+        
+
+        activeBall.GetComponent<Rigidbody>().AddForce((transform.forward + Vector3.up * 2f) * adjForce, ForceMode.Impulse);
     }
 }

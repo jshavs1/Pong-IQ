@@ -384,8 +384,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ball: {fileID: 1001182062323027920, guid: dd50cbc962ac5e6439ce864e4c3dd9d4, type: 3}
-  maxForce: 5
-  minForce: 2
 --- !u!4 &254292606
 Transform:
   m_ObjectHideFlags: 0
@@ -1044,10 +1042,13 @@ MonoBehaviour:
   inputNodes: 3
   hiddenNodes: 5
   outputNodes: 2
-  trainingIterations: 200
+  trainingSize: 25
+  remainingIterations: 0
   cannon: {fileID: 254292605}
   remainingCups: 
-  remainingIterations: 0
+  maxForce: 5
+  minForce: 3
+  maxRotation: 50
 --- !u!1 &1672920149
 GameObject:
   m_ObjectHideFlags: 0

@@ -22,38 +22,13 @@ public class NeuralNet
 
     public double[] predict(double[] x)
     {
-        /*
-        inputLayer = new InputLayer(x.Length, x);
-        Vector<double> o1 = L1.multiply(inputLayer.input);
-
-        hiddenLayer = new InputLayer(o1.Count, o1);
-        Vector<double> a1 = hiddenLayer.L1Activation;
-        //Debug.Log(o1);
-        //Debug.Log(a1);
-
-        Vector<double> o2 = L2.multiply(a1);
-        outputLayer = new InputLayer(o2.Count, o2);
-
-        return outputLayer.L2Activation.ToArray();
-        */
-
         Matrix<double> m = CreateMatrix.Dense<double>(1, inputSize, x);
         return this.predict(m).Row(0).ToArray();
     }
 
     public Matrix<double> predict(Matrix<double> X)
     {
-
         return softmax(weightedActivation(activate(weightedInput(X))));
-        /*
-        Matrix<double> y = CreateMatrix.Dense<double>(X.RowCount, outputSize);
-        for (int i = 0; i < X.RowCount; i++)
-        {
-            double[] yhat = predict(X.Row(i).ToArray());
-            y.SetRow(i, yhat);
-        }
-        return y;
-        */
     }
 
     public Matrix<double> weightedInput(Matrix<double> X)
@@ -84,14 +59,14 @@ public class NeuralNet
 
     public void train(Matrix<double> X, Matrix<double> Y)
     {
-        int passes = 1000;
+        int passes = 10000;
         for (int i = 0; i < passes; i++)
         {
             Matrix<double> y = predict(X);
             //Debug.Log(y);
-            //Debug.Log(y);
             Matrix<double> z = weightedInput(X);
             Matrix<double> a = activate(z);
+            //Debug.Log(a);
 
             Matrix<double> e2 = y - Y;
             Matrix<double> L2 = a.Transpose() * e2;
@@ -103,30 +78,32 @@ public class NeuralNet
 
             //Debug.Log(e1);
 
-            this.L1.adjustWeights(L1, e1.ColumnSums());
-            this.L2.adjustWeights(L2, e2.ColumnSums());
+            this.L1.adjustWeights(L1, e1.ColumnSums() / e1.RowCount);
+            this.L2.adjustWeights(L2, e2.ColumnSums() / e1.RowCount);
 
             //Debug.Log(this.L1.weights);
-            //Debug.Log("Pass: " + i);
+            if (i % 1000 == 0)
+            {
+                Debug.Log("Pass: " + i + ", Loss: " + loss(X, Y));
+            }
+            
+        }
+        Debug.Log(this.ToString());
+    }
+
+    private double loss(Matrix<double> X, Matrix<double> Y)
+    {
+        Matrix<double> y = predict(X);
+        Vector<double> yv = CreateVector.Dense<double>(X.RowCount);
+
+        foreach (MathNet.Numerics.Tuple<int, Vector<double>> row in y.EnumerateRowsIndexed())
+        {
+            yv[row.Item1] = Y.Row(row.Item1)[0] == 1.0 ? y.Row(row.Item1)[0] : y.Row(row.Item1)[1];  
         }
 
-        Debug.Log(this.ToString());
-
-        /*
-        Vector<double> t = CreateVector.Dense<double>(target);
-        Vector<double> a = outputLayer.L2Activation;
-        
-        Vector<double> e2 = (a - t) / a.Count;
-        Matrix<double> d2 = hiddenLayer.L1Activation.ToColumnMatrix() * e2.ToRowMatrix();
-
-
-        Matrix<double> e1 = hiddenLayer.L1Derivative.ToColumnMatrix().PointwiseMultiply((e2.ToRowMatrix() * L2.weights).Transpose());
-        Matrix<double> d1 = inputLayer.input.ToColumnMatrix() * e1.Transpose();
-
-        L2.adjustWeights(d2.Transpose(), e2);
-        L1.adjustWeights(d1.Transpose(), e1.Column(0));
-        */
-        //Debug.Log("Target: " + t[0] + ", " + t[1] + "\nOutput: " + a[0] + ", " + a[1] + "\nbias: " + L1.bias + ", " + L2.bias);
+        Vector<double> correctLogs = -1.0 * yv.PointwiseLog();
+        double loss = correctLogs.Sum();
+        return (1.0 / (double)X.RowCount) * loss;
     }
 
     public override string ToString()
