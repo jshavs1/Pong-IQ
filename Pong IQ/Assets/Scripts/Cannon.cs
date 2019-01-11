@@ -30,8 +30,6 @@ public class Cannon : MonoBehaviour
         this.transform.rotation = Quaternion.identity;
         this.transform.eulerAngles = new Vector3(0f, adjRotation);
 
-        
-
         activeBall.GetComponent<Rigidbody>().AddForce((transform.forward + Vector3.up * 2f) * adjForce, ForceMode.Impulse);
     }
 }

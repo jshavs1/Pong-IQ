@@ -59,7 +59,7 @@ public class NeuralNet
 
     public void train(Matrix<double> X, Matrix<double> Y)
     {
-        int passes = 10000;
+        int passes = 20000;
         for (int i = 0; i < passes; i++)
         {
             Matrix<double> y = predict(X);
@@ -78,8 +78,8 @@ public class NeuralNet
 
             //Debug.Log(e1);
 
-            this.L1.adjustWeights(L1, e1.ColumnSums() / e1.RowCount);
-            this.L2.adjustWeights(L2, e2.ColumnSums() / e1.RowCount);
+            this.L1.adjustWeights(L1, e1.ColumnSums());
+            this.L2.adjustWeights(L2, e2.ColumnSums());
 
             //Debug.Log(this.L1.weights);
             if (i % 1000 == 0)

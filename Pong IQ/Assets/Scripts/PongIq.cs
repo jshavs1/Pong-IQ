@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using System;
 using MathNet.Numerics.LinearAlgebra;
+using MathNet.Numerics.Data.Text;
 
 public class PongIq : MonoBehaviour
 {
@@ -12,7 +13,7 @@ public class PongIq : MonoBehaviour
     private NeuralNet nn;
     private bool training;
     public float maxForce = 5f;
-    public float minForce = 3f;
+    public float minForce = 0f;
     public float maxRotation = 50f;
     private float force, rotation;
     private double lastValue = 0.0;
@@ -60,6 +61,9 @@ public class PongIq : MonoBehaviour
         Time.timeScale = 1.0f;
         Debug.Log(Y);
         nn.train(X, Y);
+        DelimitedWriter.Write<double>("X.csv", X, ",");
+        DelimitedWriter.Write<double>("Y.csv", Y, ",");
+        DelimitedWriter.Write<double>("predict.csv", nn.predict(X), ",");
         training = false;
         Debug.Log("TrainingFinished");
     }
@@ -76,7 +80,8 @@ public class PongIq : MonoBehaviour
 
             Debug.Log(results[0] + ", " + results[1]);
         }
-        StartCoroutine(cannon.Shoot((float)(lastInput[0] / scalar), (float)(lastInput[1] / scalar), maxForce, minForce, maxRotation));
+        Debug.Log("Input: "  + input[0] + ", " + input[1]);
+        StartCoroutine(cannon.Shoot((float)(input[0] / scalar), (float)(input[1] / scalar), maxForce, minForce, maxRotation));
     }
 
     double[] GetInput()
@@ -87,7 +92,7 @@ public class PongIq : MonoBehaviour
 
         d[0] = (double) force * scalar;
         d[1] = (double) rotation * scalar;
-        d[2] = (double) Math.Sqrt(Math.Pow(d[0] - Mathf.Lerp(minForce, maxForce, 0.5f), 2.0) + Math.Pow(d[1] - Mathf.Lerp(-maxRotation, maxRotation, 0.5f), 2.0));
+        d[2] = (double) Math.Sqrt(Math.Pow(d[0] - normalize(Mathf.Lerp(minForce, maxForce, 0.5f), minForce, maxForce), 2.0) + Math.Pow(d[1] - normalize(Mathf.Lerp(-maxRotation, maxRotation, 0.5f), -maxRotation, maxRotation), 2.0));
 
         /*
         for (int i = 0; i < remainingCups.Length; i++)
@@ -96,6 +101,11 @@ public class PongIq : MonoBehaviour
         }
         */
         return d;
+    }
+
+    private double normalize(double x, double min, double max)
+    {
+        return (x - min) / (max - min);
     }
 
     public void CollisionDetected(int index, double value)
