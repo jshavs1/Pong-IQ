@@ -7,6 +7,20 @@ using MathNet.Numerics.Data.Text;
 
 public class PongIq : MonoBehaviour
 {
+    [SerializeField]
+    private State _state;
+    private State state
+    {
+        get { return _state; }
+        set
+        {
+            del?.StateChanged(_state, value);
+            this._state = value;
+        }
+    }
+
+    public IPongDelegate del;
+
     public int inputNodes, hiddenNodes, outputNodes, trainingSize, remainingIterations;
     public Cannon cannon;
     public bool[] remainingCups;
@@ -25,6 +39,7 @@ public class PongIq : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        del = FindObjectOfType<GameManager>();
         nn = new NeuralNet(inputNodes, hiddenNodes, outputNodes);
         X = CreateMatrix.Dense<double>(trainingSize, inputNodes);
         Y = CreateMatrix.Dense<double>(trainingSize, outputNodes);
@@ -33,7 +48,7 @@ public class PongIq : MonoBehaviour
         remainingIterations = trainingSize;
         training = true;
         Train();
-        Time.timeScale = 10.0f;
+        Time.timeScale = 20.0f;
 
         Debug.Log(nn.ToString());
     }
@@ -50,6 +65,8 @@ public class PongIq : MonoBehaviour
 
     void Train()
     {
+        state = State.Training;
+
         lastInput = GetInput();
 
         StartCoroutine(cannon.Shoot((float)(lastInput[0] / scalar), (float)(lastInput[1] / scalar), maxForce, minForce, maxRotation));
@@ -66,6 +83,8 @@ public class PongIq : MonoBehaviour
         DelimitedWriter.Write<double>("predict.csv", nn.predict(X), ",");
         training = false;
         Debug.Log("TrainingFinished");
+
+        state = State.Idle;
     }
 
     IEnumerator TrainedShot()
@@ -81,7 +100,9 @@ public class PongIq : MonoBehaviour
             Debug.Log(results[0] + ", " + results[1]);
         }
         Debug.Log("Input: "  + input[0] + ", " + input[1]);
+        del?.Shooting(results[0]);
         StartCoroutine(cannon.Shoot((float)(input[0] / scalar), (float)(input[1] / scalar), maxForce, minForce, maxRotation));
+        state = State.Shooting;
     }
 
     double[] GetInput()
@@ -130,5 +151,24 @@ public class PongIq : MonoBehaviour
             }
             else if (index != -1) { remainingCups[index] = true; }
         }
+        else
+        {
+            CollisionDetection[] colliders = GetComponentsInChildren<CollisionDetection>();
+            CollisionDetection collider = null;
+            foreach (CollisionDetection col in GetComponentsInChildren<CollisionDetection>())
+            {
+                if (col.index == index)
+                    collider = col;
+            }
+            del.CollisionDetected(colliders, collider, index);
+            state = State.Idle;
+        }
     }
+}
+
+public enum State
+{
+    Training,
+    Idle,
+    Shooting,
 }
